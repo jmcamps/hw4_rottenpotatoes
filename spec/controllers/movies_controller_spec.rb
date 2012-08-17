@@ -1,6 +1,101 @@
 require 'spec_helper'
 
 describe MoviesController do
+  describe 'Home page' do
+    it 'should change session if sort order has been changed to title' do
+      session[:sort] = 'release_date'
+      get :index, {:sort => 'title'}
+      session[:sort] == 'title'
+    end
+    
+    it 'should change session if sort order has been changed to release_date' do
+      session[:sort] = 'title'
+      get :index, {:sort => 'release_date'}
+      session[:sort] == 'release_date'
+    end
+    
+    it 'should make the movies availables to home page' do
+      fake_results = [mock('Movie'), mock('Movie')]        
+      Movie.stub(:find_all_by_rating).and_return(fake_results)              
+      get :index
+      assigns(:movies).should == fake_results
+    end
+    
+    it 'should call the model method that performs a search for movies by rating' do            
+      Movie.should_receive(:find_all_by_rating).with([], nil)              
+      get :index      
+    end    
+    
+    it 'should call the model method that performs a search for movies by rating whit sort by release_date' do      
+      session[:sort] = 'release_date'        
+      Movie.should_receive(:find_all_by_rating).with([], {:order => :release_date})              
+      get :index, {:sort => 'release_date'}      
+    end
+    
+    it 'should call the model method that performs a search for movies by rating whit sort by title' do
+      session[:sort] = 'title'        
+      Movie.should_receive(:find_all_by_rating).with([], {:order => :title})           
+      get :index, {:sort => 'title'}      
+    end
+        
+    it 'should redirect if selected ratings are changed' do
+      get :index, {:ratings => {:G => 1}}
+      response.should redirect_to(movies_path(:ratings => {:G => 1}))
+    end
+  end 
+    
+  describe 'Delete movie' do
+    it 'should delete the selected movie' do
+      movie = mock('Movie')
+      movie.stub!(:title)
+      
+      Movie.should_receive(:find).with('13').and_return(movie)
+      movie.should_receive(:destroy)
+      post :destroy, {:id => '13'}
+      response.should redirect_to(movies_path)
+    end
+  end
+  
+  describe 'Create page' do
+    it 'should redirect to movies path' do
+      mock_movie = mock('Movie') 
+      mock_movie.stub(:title)
+      Movie.should_receive(:create!).and_return(mock_movie)
+      post :create, {:movie => mock_movie}
+      response.should redirect_to(movies_path)
+    end
+  end
+  
+  describe 'Update page' do
+    it 'should redirect to movie path' do
+      mock_movie = mock('Movie')       
+      mock_movie.stub(:title) 
+      mock_movie.stub(:id).and_return(13)
+      mock_movie.stub(:update_attributes!).and_return(mock_movie)
+      Movie.should_receive(:find).with('13').and_return(mock_movie)         
+      post :update, {:id => 13, :movie => mock_movie}
+      response.should redirect_to(movie_path(mock_movie))
+    end
+  end
+  
+  describe 'Edit page' do
+    it 'should make movie available to edit page' do
+      mock_movie = mock('Movie')
+      Movie.stub(:find).with('13').and_return(mock_movie)            
+      get :show, {:id => '13'}     
+      assigns(:movie).should == mock_movie
+    end
+  end
+  
+  describe 'Show page' do
+    it 'should make movie available to show page' do
+      mock_movie = mock('Movie')
+      Movie.stub(:find).with('13').and_return(mock_movie)            
+      get :edit, {:id => '13'}     
+      assigns(:movie).should == mock_movie
+    end
+  end
+  
   describe 'searching by director' do
     before :each do
       @fake_results_with_movies = [mock('Movie'), mock('Movie')]
