@@ -99,7 +99,7 @@ RSpec:
     - 3
     - 
     - 
-  :created_at: 2012-08-17 09:15:24.044058 -07:00
+  :created_at: 2012-08-17 09:38:26.325535 -07:00
 Cucumber Features: 
   :original_result: 
     /home/saasbook/hw4_rottenpotatoes/app/controllers/application_controller.rb: 
